@@ -1,0 +1,434 @@
+import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowDown, ArrowUpRight, CalendarDays, Users, Sparkles, BookOpen } from 'lucide-react';
+import { motion, useMotionValue, useSpring, useInView, useScroll, useTransform, animate } from 'framer-motion';
+import { events, notices, achievements } from '../data/data';
+import Reveal from '../components/Reveal';
+import SectionHead from '../components/SectionHead';
+import Stat from '../components/Stat';
+import EventCard from '../components/EventCard';
+import EventModal from '../components/EventModal';
+import HackathonCountdown from '../components/HackathonCountdown';
+
+function Magnetic({ children, to }) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 300, damping: 18 });
+  const sy = useSpring(y, { stiffness: 300, damping: 18 });
+
+  return (
+    <Link
+      to={to}
+      onMouseMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        x.set((e.clientX - r.left - r.width / 2) * 0.15);
+        y.set((e.clientY - r.top - r.height / 2) * 0.15);
+      }}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+    >
+      <motion.span style={{ x: sx, y: sy }} className="magnetic-inner">
+        {children}
+      </motion.span>
+    </Link>
+  );
+}
+
+function ActivityGraph({ onEventClick, eventsData }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { margin: "-100px 0px" });
+
+  const pathVariants = {
+    hidden: { pathLength: 0 },
+    visible: {
+      pathLength: 1,
+      transition: { duration: 1.8, ease: "easeInOut" }
+    }
+  };
+
+  const dotVariants = {
+    hidden: { scale: 0, opacity: 0 },
+    visible: (custom) => ({
+      scale: 1,
+      opacity: 1,
+      transition: {
+        delay: custom,
+        type: "spring",
+        stiffness: 200,
+        damping: 15
+      }
+    })
+  };
+
+  const labelVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (custom) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: custom, duration: 0.3 }
+    })
+  };
+
+  return (
+    <div className="graph" ref={ref}>
+      <div className="graph-axis" />
+      <svg viewBox="0 0 600 280" preserveAspectRatio="none">
+        <motion.path
+          d="M0 250 C70 245 70 185 125 195 S195 110 250 145 S315 55 365 90 S435 45 475 70 S540 12 600 30"
+          variants={pathVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+        />
+        <motion.circle
+          cx="365" cy="90" r="6"
+          variants={dotVariants} custom={0.8} initial="hidden" animate={isInView ? "visible" : "hidden"}
+          whileHover={{ scale: 1.8, cursor: 'pointer' }}
+          onClick={() => onEventClick(eventsData[1])}
+        />
+        <motion.circle
+          cx="475" cy="70" r="6"
+          variants={dotVariants} custom={1.2} initial="hidden" animate={isInView ? "visible" : "hidden"}
+          whileHover={{ scale: 1.8, cursor: 'pointer' }}
+          onClick={() => onEventClick(eventsData[0])}
+        />
+        <motion.circle
+          cx="600" cy="30" r="6"
+          variants={dotVariants} custom={1.6} initial="hidden" animate={isInView ? "visible" : "hidden"}
+          whileHover={{ scale: 1.8, cursor: 'pointer' }}
+          onClick={() => onEventClick(eventsData[3] || eventsData[0])}
+        />
+      </svg>
+      <div className="graph-events">
+        <motion.span
+          variants={labelVariants} custom={0.8} initial="hidden" animate={isInView ? "visible" : "hidden"}
+          onClick={() => onEventClick(eventsData[1])}
+          style={{ cursor: 'pointer' }}
+          whileHover={{ color: 'var(--purple)' }}
+        >
+          TECH TALK (+10)
+        </motion.span>
+        <motion.span
+          variants={labelVariants} custom={1.2} initial="hidden" animate={isInView ? "visible" : "hidden"}
+          onClick={() => onEventClick(eventsData[0])}
+          style={{ cursor: 'pointer' }}
+          whileHover={{ color: 'var(--purple)' }}
+        >
+          IGNITE HACKATHON (+25)
+        </motion.span>
+        <motion.span
+          variants={labelVariants} custom={1.6} initial="hidden" animate={isInView ? "visible" : "hidden"}
+          onClick={() => onEventClick(eventsData[3] || eventsData[0])}
+          style={{ cursor: 'pointer' }}
+          whileHover={{ color: 'var(--purple)' }}
+        >
+          100 PTS COMPLETE
+        </motion.span>
+      </div>
+    </div>
+  );
+}
+function FormingWord({ word, delay = 0, isOutlined = false }) {
+  const letters = word.split('');
+  const glyphs = '01#$&*+~<>[]_//X';
+  const [displayChars, setDisplayChars] = useState(() => letters);
+
+  useEffect(() => {
+    const timeouts = [];
+    const intervals = [];
+
+    letters.forEach((targetChar, index) => {
+      const charDelay = delay * 1000 + index * 55;
+
+      const t = setTimeout(() => {
+        let cycles = 0;
+        const maxCycles = 5 + Math.floor(Math.random() * 3);
+
+        const interval = setInterval(() => {
+          cycles++;
+          if (cycles >= maxCycles) {
+            clearInterval(interval);
+            setDisplayChars(prev => {
+              const next = [...prev];
+              next[index] = targetChar;
+              return next;
+            });
+          } else {
+            setDisplayChars(prev => {
+              const next = [...prev];
+              next[index] = glyphs[Math.floor(Math.random() * glyphs.length)];
+              return next;
+            });
+          }
+        }, 32);
+
+        intervals.push(interval);
+      }, charDelay);
+
+      timeouts.push(t);
+    });
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      intervals.forEach(clearInterval);
+    };
+  }, [word, delay]);
+
+  return (
+    <span className={`forming-word ${isOutlined ? 'outlined' : ''}`}>
+      {letters.map((_, i) => (
+        <motion.span
+          key={i}
+          className="forming-char"
+          initial={{ opacity: 0, y: 44, rotateX: -60, filter: 'blur(8px)' }}
+          animate={{ opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)' }}
+          transition={{
+            duration: 0.65,
+            delay: delay + i * 0.045,
+            ease: [0.16, 1, 0.3, 1]
+          }}
+          whileHover={{ 
+            y: -5, 
+            scale: 1.05, 
+            transition: { duration: 0.2 } 
+          }}
+        >
+          {displayChars[i]}
+        </motion.span>
+      ))}
+    </span>
+  );
+}
+
+export default function Home() {
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
+  return (
+    <>
+      {/* Section A: Hero */}
+      <section className="hero">
+        <div className="hero-grid" />
+
+        {/* Left Column: Main Card & SAIT Intro */}
+        <div className="hero-left hero-intro-col">
+          <motion.div 
+            className="eyebrow"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.05 }}
+          >
+            SAIT / DIVISION OF INFORMATION TECHNOLOGY / SOE CUSAT
+          </motion.div>
+          <h1 className="hero-forming-heading">
+            <FormingWord word="Build." delay={0.12} />
+            <FormingWord word="Participate." delay={0.44} />
+            <FormingWord word="Achieve." delay={0.88} isOutlined={true} />
+          </h1>
+          <motion.p 
+            className="hero-copy"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 1.15, ease: [0.16, 1, 0.3, 1] }}
+          >
+            The student layer connecting CUSAT's IT community — flagship hackathons,
+            faculty guidance, verified student activity tracking, and career opportunities
+            happening between lectures.
+          </motion.p>
+          <motion.div 
+            className="hero-actions"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.3, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <Magnetic to="/events">
+              Explore Events <ArrowUpRight size={17} />
+            </Magnetic>
+            <Link className="text-link" to="/activity">
+              Log your activity points <ArrowUpRight size={15} />
+            </Link>
+          </motion.div>
+
+          <motion.div 
+            className="mini-grid hero-mini-grid"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.45, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <Link to="/events">
+              <CalendarDays />
+              <span>
+                Upcoming
+                <br />
+                <b>events & talks</b>
+              </span>
+            </Link>
+            <Link to="/about">
+              <BookOpen />
+              <span>
+                Faculty &
+                <br />
+                <b>syllabus hub</b>
+              </span>
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* Right Column: Hackathon Showcase & Live Countdown Timer */}
+        <motion.div 
+          className="hero-right hero-hackathon-col"
+          initial={{ opacity: 0, y: 30, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.85, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <HackathonCountdown
+            event={events[0]}
+            onRegister={(ev) => setSelectedEvent(ev)}
+            onDetails={(ev) => setSelectedEvent(ev)}
+          />
+        </motion.div>
+
+        <div className="scroll-cue">
+          <ArrowDown size={14} /> SCROLL TO EXPLORE
+        </div>
+      </section>
+
+      {/* Ticker Strip */}
+      <div className="ticker">
+        <div className="ticker-track">
+          {Array(2)
+            .fill([
+              'DIVISION OF IT',
+              'SOE CUSAT',
+              'IGNITE HACKATHON',
+              'STUDENT ACTIVITY LOGGER',
+              '100 ACTIVITY POINTS',
+              'TECH & MEDIA TEAMS',
+              'CAMPUS PLACEMENTS',
+              'ALUMNI NETWORK',
+              'HALL OF FAME'
+            ])
+            .flat()
+            .map((x, i) => (
+              <span key={i}>
+                {x} <i>✳</i>
+              </span>
+            ))}
+        </div>
+      </div>
+
+      {/* Key Statistics Strip */}
+      <section className="stats-strip">
+        {[
+          ['1,200+', 'IT students across all active batches'],
+          ['40+', 'technical & community events per year'],
+          ['85%', 'average placement rate across top firms'],
+          ['60+', 'hackathon & competition national wins']
+        ].map(([v, l]) => (
+          <Stat key={v} value={v} label={l} />
+        ))}
+      </section>
+
+      {/* Events Spotlight */}
+      <section className="section events-home">
+        <Reveal>
+          <SectionHead
+            eyebrow="02 / WHAT'S HAPPENING"
+            title="Don't miss the next build."
+            copy="A live calendar for the hackathons, workshops, research talks, and community sessions that make the department feel like a family."
+          />
+        </Reveal>
+        <Reveal delay={0.1}>
+          <div className="event-feature">
+            <EventCard
+              event={events[0]}
+              featured
+              onRegister={() => setSelectedEvent(events[0])}
+            />
+            <div className="event-side">
+              <div className="side-note">
+                <Sparkles size={18} />
+                <span>SAIT PICKS</span>
+                <p>Two days. One room. 36 hours of raw code, caffeine, and prototypes.</p>
+              </div>
+              <Link to="/events" className="boxed-link">
+                View full calendar <ArrowUpRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Activity Logger Teaser */}
+      <section className="section activity-tease">
+        <Reveal>
+          <div className="activity-panel">
+            <div className="activity-copy">
+              <div className="eyebrow" style={{ color: '#fff' }}>03 / YOUR TRACE</div>
+              <h2>
+                Make your work
+                <br />
+                <em>count.</em>
+              </h2>
+              <p>
+                Log your hackathon wins, research papers, workshops, and volunteering.
+                Track your KTU/CUSAT 100 activity points progress with instant verification
+                and an official verifiable record.
+              </p>
+              <Link className="dark-link" to="/activity">
+                Open Activity Logger <ArrowUpRight size={16} />
+              </Link>
+            </div>
+            <div className="activity-graph">
+              <div className="graph-label">ACTIVITY POINT TRAJECTORY / 2024—2026</div>
+              <ActivityGraph onEventClick={setSelectedEvent} eventsData={events} />
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Latest Notices & Hall of Fame Highlight */}
+      <section className="section split-section">
+        <Reveal>
+          <SectionHead
+            eyebrow="04 / LATEST"
+            title="A department that keeps moving."
+          />
+        </Reveal>
+        <div className="latest-grid">
+          <Reveal>
+            <div className="notice-stack">
+              {notices.slice(0, 4).map((n) => (
+                <Link to="/notices" className="notice-row" key={n.id}>
+                  <b>{n.id}</b>
+                  <span>{n.title}</span>
+                  <small>{n.date}</small>
+                  <ArrowUpRight size={16} />
+                </Link>
+              ))}
+            </div>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <div className="achievement-highlight">
+              <div>
+                <div className="eyebrow" style={{ color: 'var(--lime)' }}>HALL OF FAME SPOTLIGHT</div>
+                <div className="big-year">{achievements[0].year}</div>
+                <h3>{achievements[0].title}</h3>
+                <p>{achievements[0].detail}</p>
+              </div>
+              <Link to="/achievements">
+                Explore all department honors <ArrowUpRight size={15} />
+              </Link>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Event Registration Modal */}
+      <EventModal
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
+    </>
+  );
+}
