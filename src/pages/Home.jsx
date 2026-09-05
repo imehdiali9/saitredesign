@@ -39,6 +39,14 @@ function Magnetic({ children, to }) {
 function ActivityGraph({ onEventClick, eventsData }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { margin: "-60px 0px" });
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 680);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const pathVariants = {
     hidden: { pathLength: 0 },
@@ -80,92 +88,169 @@ function ActivityGraph({ onEventClick, eventsData }) {
     })
   };
 
-  const yGridLines = [
-    { pts: "100 PTS", y: 35 },
-    { pts: "75 PTS", y: 80 },
-    { pts: "50 PTS", y: 125 },
-    { pts: "25 PTS", y: 170 },
-    { pts: "0 PTS", y: 215 }
-  ];
-
-  const xMarkers = [
-    { label: "SEM 1", x: 100 },
-    { label: "SEM 2", x: 200 },
-    { label: "SEM 3", x: 310 },
-    { label: "SEM 4", x: 420 },
-    { label: "SEM 5", x: 510 },
-    { label: "SEM 6+", x: 580 }
-  ];
-
-  const milestones = [
-    {
-      x: 180,
-      y: 175,
-      dropY: 215,
-      leaderTopY: 148,
-      rectX: 115,
-      rectY: 124,
-      rectW: 130,
-      rectH: 24,
-      textX: 180,
-      textY: 140,
-      label: "TECH TALK (+10)",
-      delay: 0.9,
-      event: eventsData[1]
-    },
-    {
-      x: 370,
-      y: 100,
-      dropY: 215,
-      leaderTopY: 72,
-      rectX: 285,
-      rectY: 48,
-      rectW: 170,
-      rectH: 24,
-      textX: 370,
-      textY: 64,
-      label: "IGNITE HACKATHON (+25)",
-      delay: 1.3,
-      event: eventsData[0]
-    },
-    {
-      x: 560,
-      y: 35,
-      dropY: 215,
-      leaderTopY: 35,
-      rectX: 405,
-      rectY: 23,
-      rectW: 145,
-      rectH: 24,
-      textX: 477,
-      textY: 39,
-      label: "★ 100 PTS COMPLETE",
-      isGoal: true,
-      delay: 1.7,
-      event: eventsData[3] || eventsData[0]
-    }
-  ];
+  // Adaptive coordinates preventing cramped layout on mobile screens
+  const config = isMobile
+    ? {
+        viewBox: "0 0 380 230",
+        path: "M 42 185 C 72 184, 95 162, 125 145 C 155 128, 185 140, 210 125 C 228 114, 235 105, 245 95 C 275 70, 310 50, 352 32",
+        axisX1: 42,
+        axisX2: 365,
+        axisY: 185,
+        yGridLines: [
+          { pts: "100", y: 32 },
+          { pts: "75", y: 70 },
+          { pts: "50", y: 108 },
+          { pts: "25", y: 146 },
+          { pts: "0", y: 185 }
+        ],
+        xMarkers: [
+          { label: "S1", x: 68 },
+          { label: "S2", x: 125 },
+          { label: "S3", x: 185 },
+          { label: "S4", x: 245 },
+          { label: "S5", x: 305 },
+          { label: "S6+", x: 352 }
+        ],
+        milestones: [
+          {
+            x: 125,
+            y: 145,
+            dropY: 185,
+            leaderTopY: 128,
+            rectX: 62,
+            rectY: 106,
+            rectW: 108,
+            rectH: 22,
+            textX: 116,
+            textY: 120,
+            label: "TECH TALK (+10)",
+            delay: 0.9,
+            event: eventsData[1]
+          },
+          {
+            x: 245,
+            y: 95,
+            dropY: 185,
+            leaderTopY: 78,
+            rectX: 182,
+            rectY: 56,
+            rectW: 114,
+            rectH: 22,
+            textX: 239,
+            textY: 70,
+            label: "IGNITE (+25)",
+            delay: 1.3,
+            event: eventsData[0]
+          },
+          {
+            x: 352,
+            y: 32,
+            dropY: 185,
+            leaderTopY: 32,
+            rectX: 252,
+            rectY: 15,
+            rectW: 94,
+            rectH: 22,
+            textX: 299,
+            textY: 29,
+            label: "★ 100 PTS",
+            isGoal: true,
+            delay: 1.7,
+            event: eventsData[3] || eventsData[0]
+          }
+        ]
+      }
+    : {
+        viewBox: "0 0 640 260",
+        path: "M 65 215 C 100 214, 140 195, 180 175 C 220 155, 250 175, 290 160 C 330 145, 345 115, 370 100 C 405 80, 440 105, 480 75 C 515 50, 535 38, 560 35",
+        axisX1: 65,
+        axisX2: 615,
+        axisY: 215,
+        yGridLines: [
+          { pts: "100 PTS", y: 35 },
+          { pts: "75 PTS", y: 80 },
+          { pts: "50 PTS", y: 125 },
+          { pts: "25 PTS", y: 170 },
+          { pts: "0 PTS", y: 215 }
+        ],
+        xMarkers: [
+          { label: "SEM 1", x: 100 },
+          { label: "SEM 2", x: 200 },
+          { label: "SEM 3", x: 310 },
+          { label: "SEM 4", x: 420 },
+          { label: "SEM 5", x: 510 },
+          { label: "SEM 6+", x: 580 }
+        ],
+        milestones: [
+          {
+            x: 180,
+            y: 175,
+            dropY: 215,
+            leaderTopY: 148,
+            rectX: 115,
+            rectY: 124,
+            rectW: 130,
+            rectH: 24,
+            textX: 180,
+            textY: 140,
+            label: "TECH TALK (+10)",
+            delay: 0.9,
+            event: eventsData[1]
+          },
+          {
+            x: 370,
+            y: 100,
+            dropY: 215,
+            leaderTopY: 72,
+            rectX: 285,
+            rectY: 48,
+            rectW: 170,
+            rectH: 24,
+            textX: 370,
+            textY: 64,
+            label: "IGNITE HACKATHON (+25)",
+            delay: 1.3,
+            event: eventsData[0]
+          },
+          {
+            x: 560,
+            y: 35,
+            dropY: 215,
+            leaderTopY: 35,
+            rectX: 460,
+            rectY: 18,
+            rectW: 152,
+            rectH: 24,
+            textX: 536,
+            textY: 34,
+            label: "★ 100 PTS COMPLETE",
+            isGoal: true,
+            delay: 1.7,
+            event: eventsData[3] || eventsData[0]
+          }
+        ]
+      };
 
   return (
     <div className="graph" ref={ref}>
-      <svg viewBox="0 0 640 260" preserveAspectRatio="none">
+      <svg viewBox={config.viewBox}>
         {/* Horizontal Gridlines & Y-Axis Labels */}
-        {yGridLines.map((grid) => (
+        {config.yGridLines.map((grid) => (
           <g key={grid.pts}>
             <line
-              x1="65"
+              x1={config.axisX1}
               y1={grid.y}
-              x2="615"
+              x2={config.axisX2}
               y2={grid.y}
               stroke="rgba(255, 255, 255, 0.09)"
               strokeDasharray="3 4"
             />
             <text
-              x="58"
+              x={config.axisX1 - 6}
               y={grid.y + 3.5}
               textAnchor="end"
               fill="rgba(255, 255, 255, 0.45)"
-              fontSize="9"
+              fontSize={isMobile ? "8" : "9"}
               fontFamily="'DM Mono', monospace"
               letterSpacing="0.05em"
             >
@@ -175,16 +260,30 @@ function ActivityGraph({ onEventClick, eventsData }) {
         ))}
 
         {/* X-Axis Baseline & Semester Markers */}
-        <line x1="65" y1="215" x2="615" y2="215" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-        {xMarkers.map((m) => (
+        <line
+          x1={config.axisX1}
+          y1={config.axisY}
+          x2={config.axisX2}
+          y2={config.axisY}
+          stroke="rgba(255, 255, 255, 0.2)"
+          strokeWidth="1"
+        />
+        {config.xMarkers.map((m) => (
           <g key={m.label}>
-            <line x1={m.x} y1="215" x2={m.x} y2="220" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1" />
+            <line
+              x1={m.x}
+              y1={config.axisY}
+              x2={m.x}
+              y2={config.axisY + 5}
+              stroke="rgba(255, 255, 255, 0.3)"
+              strokeWidth="1"
+            />
             <text
               x={m.x}
-              y="234"
+              y={config.axisY + 16}
               textAnchor="middle"
               fill="rgba(255, 255, 255, 0.4)"
-              fontSize="9"
+              fontSize={isMobile ? "8" : "9"}
               fontFamily="'DM Mono', monospace"
               letterSpacing="0.08em"
             >
@@ -195,7 +294,7 @@ function ActivityGraph({ onEventClick, eventsData }) {
 
         {/* Trajectory Curve */}
         <motion.path
-          d="M 65 215 C 100 214, 140 195, 180 175 C 220 155, 250 175, 290 160 C 330 145, 345 115, 370 100 C 405 80, 440 105, 480 75 C 515 50, 535 38, 560 35"
+          d={config.path}
           variants={pathVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -206,7 +305,7 @@ function ActivityGraph({ onEventClick, eventsData }) {
         />
 
         {/* Leader Lines, Milestone Dots & Connected Milestone Callouts */}
-        {milestones.map((m) => (
+        {config.milestones.map((m) => (
           <g key={m.label} className="milestone-group">
             {/* Vertical drop line down to X axis */}
             <motion.line
@@ -227,8 +326,8 @@ function ActivityGraph({ onEventClick, eventsData }) {
             <motion.line
               x1={m.x}
               y1={m.y}
-              x2={m.isGoal ? m.rectX + m.rectW : m.x}
-              y2={m.isGoal ? m.rectY + m.rectH / 2 : m.leaderTopY}
+              x2={m.isGoal ? (isMobile ? m.x - 6 : m.rectX + m.rectW) : m.x}
+              y2={m.isGoal ? (isMobile ? m.rectY + m.rectH / 2 : m.rectY + m.rectH / 2) : m.leaderTopY}
               stroke="rgba(217, 255, 74, 0.6)"
               strokeWidth="1.2"
               strokeDasharray="2 2"
@@ -242,7 +341,7 @@ function ActivityGraph({ onEventClick, eventsData }) {
             <motion.circle
               cx={m.x}
               cy={m.y}
-              r="5.5"
+              r={isMobile ? 5 : 5.5}
               fill="#d9ff4a"
               stroke="#181226"
               strokeWidth="2"
@@ -278,7 +377,7 @@ function ActivityGraph({ onEventClick, eventsData }) {
                 y={m.textY}
                 textAnchor="middle"
                 fill={m.isGoal ? "#d9ff4a" : "#f1edfa"}
-                fontSize="9"
+                fontSize={isMobile ? "8" : "9"}
                 fontWeight={m.isGoal ? "700" : "500"}
                 fontFamily="'DM Mono', monospace"
                 letterSpacing="0.08em"
@@ -289,6 +388,34 @@ function ActivityGraph({ onEventClick, eventsData }) {
           </g>
         ))}
       </svg>
+
+      {/* Mobile Interactive Milestone Cards */}
+      <div className="mobile-milestones-row">
+        <button
+          type="button"
+          className="mobile-m-chip"
+          onClick={() => onEventClick(eventsData[1])}
+        >
+          <span className="m-pts">+10 PTS</span>
+          <span className="m-name">Tech Talk</span>
+        </button>
+        <button
+          type="button"
+          className="mobile-m-chip"
+          onClick={() => onEventClick(eventsData[0])}
+        >
+          <span className="m-pts">+25 PTS</span>
+          <span className="m-name">Ignite Hackathon</span>
+        </button>
+        <button
+          type="button"
+          className="mobile-m-chip highlight"
+          onClick={() => onEventClick(eventsData[3] || eventsData[0])}
+        >
+          <span className="m-pts">★ 100 PTS</span>
+          <span className="m-name">Goal Complete</span>
+        </button>
+      </div>
     </div>
   );
 }
