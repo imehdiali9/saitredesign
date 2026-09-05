@@ -35,6 +35,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Desktop Custom Cursor: SAIT Logo */
+@media (min-width: 961px) and (hover: hover) and (pointer: fine) {
+  *, *::before, *::after {
+    cursor: url('/sait-cursor.png') 15 15, auto;
+  }
+
+  a, a *, button, button *, [role="button"], [role="button"] *,
+  input[type="submit"], input[type="button"],
+  .cmd-trigger-btn, .nav-cta, .filter-chip, .event-card, .person-card,
+  .pill, .tag, .hero-metric, .achieve-row, .ticker-wrap, .stat-col,
+  .resource-card, .alumni-card, .faculty-card, .leaderboard-row, .history-row {
+    cursor: url('/sait-cursor-hover.png') 16 16, pointer !important;
+  }
+
+  input[type="text"], input[type="email"], input[type="search"], textarea, select {
+    cursor: text !important;
+  }
+
+  :disabled, [aria-disabled="true"] {
+    cursor: not-allowed !important;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -70,6 +93,7 @@ button, input, select, textarea {
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 28px;
   padding: 0 max(28px, calc((100vw - 1280px) / 2));
   background: rgba(244, 244, 239, 0.92);
@@ -84,6 +108,8 @@ button, input, select, textarea {
   align-items: center;
   gap: 12px;
   min-width: 230px;
+  flex-shrink: 0;
+  text-decoration: none;
 }
 
 .brand-logo {
@@ -104,6 +130,7 @@ button, input, select, textarea {
   font-size: 20px;
   letter-spacing: -0.07em;
   color: var(--ink);
+  flex-shrink: 0;
 }
 
 .brand-sub {
@@ -113,6 +140,8 @@ button, input, select, textarea {
   color: var(--muted);
   border-left: 1px solid var(--line);
   padding-left: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .desktop-nav {
@@ -160,6 +189,7 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-left: auto;
 }
 
 .cmd-trigger-btn {
@@ -217,7 +247,18 @@ button, input, select, textarea {
   border: 0;
   background: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--ink);
+  line-height: 0;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mobile-menu:hover,
+.mobile-menu:focus-visible {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .mobile-nav {
@@ -292,28 +333,79 @@ button, input, select, textarea {
   cursor: pointer;
 }
 
-/* On word hover, characters smoothly shift to purple */
-.forming-word:not(.outlined):hover .forming-char {
-  color: var(--purple);
-}
-
-/* Individual letter hover intensifies color and lifts */
-.forming-word:not(.outlined) .forming-char:hover {
-  color: var(--purple-hover) !important;
-}
-
-/* Outlined word Achieve. color transition on hover */
+/* Outlined word Achieve base style */
 .hero h1 .outlined, .forming-word.outlined .forming-char {
   color: transparent;
   -webkit-text-stroke: 1.5px var(--ink);
 }
 
+/* Cursor hover interactions (Desktop) */
+.forming-word:not(.outlined):hover .forming-char {
+  color: var(--purple);
+}
+.forming-word:not(.outlined) .forming-char:hover {
+  color: var(--purple-hover) !important;
+}
 .forming-word.outlined:hover .forming-char {
   -webkit-text-stroke-color: var(--purple);
 }
-
 .forming-word.outlined .forming-char:hover {
   -webkit-text-stroke-color: var(--purple-hover) !important;
+}
+
+/* Mobile view (<= 960px): Automatic ambient kinetic ripple flowing through letters */
+@media (max-width: 960px) {
+  .forming-word:not(.outlined):hover .forming-char {
+    color: inherit;
+  }
+  .forming-word:not(.outlined) .forming-char:hover {
+    color: inherit !important;
+  }
+  .forming-word.outlined:hover .forming-char {
+    -webkit-text-stroke-color: var(--ink);
+  }
+  .forming-word.outlined .forming-char:hover {
+    -webkit-text-stroke-color: var(--ink) !important;
+  }
+
+  .forming-word:not(.outlined) .forming-char {
+    animation: mobileCharWave 5.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    animation-delay: var(--char-wave-delay, 0s);
+  }
+  .forming-word.outlined .forming-char {
+    animation: mobileOutlinedWave 5.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    animation-delay: var(--char-wave-delay, 0s);
+  }
+}
+
+@keyframes mobileCharWave {
+  0%, 45%, 100% {
+    transform: translateY(0) scale(1);
+    color: var(--ink);
+  }
+  6% {
+    transform: translateY(-4px) scale(1.06);
+    color: var(--purple);
+  }
+  14% {
+    transform: translateY(0) scale(1);
+    color: var(--ink);
+  }
+}
+
+@keyframes mobileOutlinedWave {
+  0%, 45%, 100% {
+    transform: translateY(0) scale(1);
+    -webkit-text-stroke-color: var(--ink);
+  }
+  6% {
+    transform: translateY(-4px) scale(1.06);
+    -webkit-text-stroke-color: var(--purple);
+  }
+  14% {
+    transform: translateY(0) scale(1);
+    -webkit-text-stroke-color: var(--ink);
+  }
 }
 
 .hero-copy {
@@ -447,6 +539,7 @@ button, input, select, textarea {
   box-shadow: 12px 12px 0 #e2e1da;
   position: relative;
   overflow: hidden;
+  font-family: Manrope, system-ui, -apple-system, sans-serif;
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
 }
 
@@ -468,9 +561,10 @@ button, input, select, textarea {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font: 700 10.5px 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
   color: var(--purple);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -482,9 +576,10 @@ button, input, select, textarea {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font: 700 10.5px 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
   color: #1a7d42;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
 }
 
 .live-pulse-dot {
@@ -502,14 +597,15 @@ button, input, select, textarea {
 
 .h-date-chip {
   display: inline-block;
-  font: 600 11px 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
   background: var(--purple-cream);
   color: var(--purple);
   border: 1px solid var(--purple-border);
-  padding: 3px 10px;
+  padding: 4px 11px;
   border-radius: 999px;
   margin-bottom: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
 }
 
 .h-main-title {
@@ -544,10 +640,12 @@ button, input, select, textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font: 700 10px 'DM Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 800;
   color: var(--muted);
   margin-bottom: 14px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .h-countdown-label {
@@ -586,12 +684,12 @@ button, input, select, textarea {
 }
 
 .h-time-val {
-  font-family: 'DM Mono', monospace;
-  font-size: clamp(24px, 2.3vw, 34px);
+  font-size: clamp(26px, 2.4vw, 36px);
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
   line-height: 1;
   color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .h-time-block.highlight .h-time-val {
@@ -599,12 +697,12 @@ button, input, select, textarea {
 }
 
 .h-time-unit {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.14em;
+  font-size: 10px;
+  letter-spacing: 0.06em;
   color: var(--muted);
   margin-top: 6px;
   font-weight: 700;
+  text-transform: uppercase;
 }
 
 .h-time-block.highlight .h-time-unit {
@@ -612,8 +710,7 @@ button, input, select, textarea {
 }
 
 .h-time-sep {
-  font-family: 'DM Mono', monospace;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--purple-border);
   user-select: none;
@@ -652,14 +749,15 @@ button, input, select, textarea {
 }
 
 .h-m-label {
-  font: 600 9px 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--muted);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .h-m-val {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--ink);
   margin-top: 2px;
@@ -676,13 +774,14 @@ button, input, select, textarea {
 }
 
 .h-tracks-title {
-  font: 700 10px 'DM Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 800;
   color: var(--muted);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 }
 
 .h-track-pill {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   background: #ffffff;
   border: 1px solid var(--line);
@@ -705,10 +804,10 @@ button, input, select, textarea {
 .h-cap-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--muted);
   margin-bottom: 6px;
-  font-family: 'DM Mono', monospace;
 }
 
 .h-cap-labels b {
@@ -2478,6 +2577,7 @@ button, input, select, textarea {
   display: grid;
   gap: 14px;
   font-size: 12px;
+  word-break: break-word;
 }
 
 .contact-item {
@@ -2485,6 +2585,8 @@ button, input, select, textarea {
   gap: 12px;
   align-items: flex-start;
   color: #4a5260;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .contact-item svg {
@@ -2507,6 +2609,9 @@ button, input, select, textarea {
 .map-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   font: 500 9px 'DM Mono', monospace;
   color: var(--muted);
 }
@@ -2538,6 +2643,35 @@ button, input, select, textarea {
   padding: 34px;
   display: grid;
   gap: 18px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.contact-form-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.contact-form-badge {
+  font: 500 10px 'DM Mono', monospace;
+  color: var(--purple);
+}
+
+.contact-form-sub {
+  font: 500 9px 'DM Mono', monospace;
+  color: var(--muted);
+}
+
+.contact-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  min-width: 0;
 }
 
 .contact-form label {
@@ -2545,6 +2679,7 @@ button, input, select, textarea {
   gap: 6px;
   font-size: 11px;
   font-weight: 800;
+  min-width: 0;
 }
 
 .contact-form input,
@@ -2556,6 +2691,10 @@ button, input, select, textarea {
   font-size: 12px;
   outline: 0;
   border-radius: 4px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .contact-form input:focus,
@@ -2747,6 +2886,12 @@ button, input, select, textarea {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
+.modal-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
 .ticket-modal-close {
   position: absolute;
   top: 20px;
@@ -2843,15 +2988,22 @@ button, input, select, textarea {
 
 /* Responsive Media Queries */
 @media (max-width: 960px) {
-  .desktop-nav, .nav-cta, .cmd-trigger-btn {
+  .desktop-nav, .nav-actions .nav-cta, .nav-actions .cmd-trigger-btn {
     display: none;
   }
   .nav-wrap {
     height: 64px;
     padding: 0 20px;
+    justify-content: space-between;
+  }
+  .nav-actions {
+    margin-left: auto;
   }
   .mobile-menu {
-    display: block;
+    display: inline-flex;
+  }
+  .mobile-nav .cmd-trigger-btn {
+    display: inline-flex;
   }
   .mobile-nav {
     display: flex;
@@ -3224,6 +3376,10 @@ button, input, select, textarea {
     max-width: 94vw;
     border-radius: 8px;
   }
+  .modal-form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
   .ticket-pass {
     padding: 18px 14px;
   }
@@ -3235,12 +3391,79 @@ button, input, select, textarea {
   .ticket-qr {
     align-self: center;
   }
+
+  /* Section L: Footer & Contact Mobile */
+  .footer-contact-wrap {
+    padding: 48px 16px 40px;
+  }
+  .footer-contact-grid {
+    gap: 34px;
+  }
+  .contact-left h2 {
+    font-size: clamp(30px, 8vw, 36px);
+    letter-spacing: -0.04em;
+    margin: 10px 0 14px;
+    line-height: 1;
+  }
+  .contact-left p {
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .contact-details {
+    margin-top: 20px;
+    gap: 12px;
+  }
+  .map-card {
+    padding: 16px 14px;
+    margin-top: 20px;
+    gap: 10px;
+  }
+  .map-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .contact-form {
+    padding: 22px 16px;
+    gap: 14px;
+  }
+  .contact-form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .contact-send-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .footer {
+    padding: 40px 16px 32px;
+    gap: 28px;
+  }
+  .footer-links {
+    gap: 24px;
+  }
 }
 
 /* Micro-screen Optimization: Screens <= 400px */
 @media (max-width: 400px) {
+  .nav-wrap {
+    padding: 0 12px;
+  }
+  .brand {
+    gap: 7px;
+  }
+  .brand-logo {
+    width: 28px;
+    height: 28px;
+  }
+  .brand-mark {
+    font-size: 16px;
+  }
   .brand-sub {
-    display: none;
+    display: block;
+    font-size: 7.5px;
+    line-height: 1.2;
+    padding-left: 7px;
   }
   .hero-forming-heading {
     font-size: 36px;
@@ -3254,6 +3477,13 @@ button, input, select, textarea {
   .h-metrics-grid {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+  .footer-links {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .contact-left h2 {
+    font-size: 28px;
   }
 }
 

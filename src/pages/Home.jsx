@@ -129,10 +129,14 @@ function ActivityGraph({ onEventClick, eventsData }) {
     </div>
   );
 }
-function FormingWord({ word, delay = 0, isOutlined = false }) {
+function FormingWord({ word, delay = 0, isOutlined = false, wordIndex = 0 }) {
   const letters = word.split('');
   const glyphs = '01#$&*+~<>[]_//X';
   const [displayChars, setDisplayChars] = useState(() => letters);
+
+  // Stagger delays for ambient wave on mobile (cycle restarts every ~5.5s)
+  const wordBaseDelays = [0, 0.65, 1.75];
+  const baseDelay = wordBaseDelays[wordIndex] || 0;
 
   useEffect(() => {
     const timeouts = [];
@@ -181,6 +185,9 @@ function FormingWord({ word, delay = 0, isOutlined = false }) {
         <motion.span
           key={i}
           className="forming-char"
+          style={{
+            '--char-wave-delay': `${(baseDelay + i * 0.08).toFixed(2)}s`
+          }}
           initial={{ opacity: 0, y: 44, rotateX: -60, filter: 'blur(8px)' }}
           animate={{ opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)' }}
           transition={{
@@ -221,9 +228,9 @@ export default function Home() {
             SAIT / DIVISION OF INFORMATION TECHNOLOGY / SOE CUSAT
           </motion.div>
           <h1 className="hero-forming-heading">
-            <FormingWord word="Build." delay={0.12} />
-            <FormingWord word="Participate." delay={0.44} />
-            <FormingWord word="Achieve." delay={0.88} isOutlined={true} />
+            <FormingWord word="Build." delay={0.12} wordIndex={0} />
+            <FormingWord word="Participate." delay={0.44} wordIndex={1} />
+            <FormingWord word="Achieve." delay={0.88} isOutlined={true} wordIndex={2} />
           </h1>
           <motion.p 
             className="hero-copy"

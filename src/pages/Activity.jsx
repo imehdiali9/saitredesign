@@ -134,9 +134,24 @@ export default function Activity() {
                 {submittedToast && (
                   <div className="submit-success-toast">
                     <CheckCircle2 size={18} />
-                    <span>
-                      Activity recorded! Sent to SAIT Faculty Verification Cell.
-                      Check "My Activity History" tab to monitor status.
+                    <span style={{ flex: 1 }}>
+                      Activity recorded! Sent to SAIT Faculty Verification Cell.{' '}
+                      <button
+                        type="button"
+                        onClick={() => setTab('history')}
+                        style={{
+                          display: 'inline',
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          color: 'var(--purple)',
+                          fontWeight: 700,
+                          textDecoration: 'underline',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        View in History →
+                      </button>
                     </span>
                   </div>
                 )}

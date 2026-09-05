@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, CheckCircle, QrCode, Calendar, MapPin, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, CheckCircle, Calendar, MapPin, Download } from 'lucide-react';
 
 export default function EventModal({ event, onClose }) {
   const [name, setName] = useState('');
@@ -7,6 +7,22 @@ export default function EventModal({ event, onClose }) {
   const [batch, setBatch] = useState('S5 IT');
   const [registered, setRegistered] = useState(false);
   const [ticketId, setTicketId] = useState('');
+  const [downloaded, setDownloaded] = useState(false);
+
+  useEffect(() => {
+    if (!event) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [event, onClose]);
 
   if (!event) return null;
 
@@ -17,10 +33,15 @@ export default function EventModal({ event, onClose }) {
     setRegistered(true);
   };
 
+  const handleDownload = () => {
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 3000);
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="ticket-modal" onClick={e => e.stopPropagation()}>
-        <button className="ticket-modal-close" onClick={onClose}>
+        <button className="ticket-modal-close" onClick={onClose} aria-label="Close modal">
           <X size={20}/>
         </button>
 
@@ -58,7 +79,7 @@ export default function EventModal({ event, onClose }) {
                 />
               </label>
 
-              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px'}}>
+              <div className="modal-form-row">
                 <label style={{display:'grid', gap:'6px', fontSize:'11px', fontWeight:800}}>
                   CUSAT Reg No. / Roll No.
                   <input
@@ -144,9 +165,17 @@ export default function EventModal({ event, onClose }) {
               <button
                 className="submit-btn"
                 style={{flex:1, padding:'11px'}}
-                onClick={() => alert(`Pass ${ticketId} saved to downloads!`)}
+                onClick={handleDownload}
               >
-                <Download size={14}/> Download Pass
+                {downloaded ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <CheckCircle size={14}/> Pass Saved!
+                  </span>
+                ) : (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Download size={14}/> Download Pass
+                  </span>
+                )}
               </button>
               <button
                 style={{background:'none', border:'1px solid var(--line)', borderRadius:'999px', padding:'11px 18px', fontSize:'12px', fontWeight:700, cursor:'pointer'}}

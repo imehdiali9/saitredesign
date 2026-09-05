@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Bell, ArrowUpRight, Search, AlertCircle, Calendar, Pin } from 'lucide-react';
 import { notices } from '../data/data';
 import Reveal from '../components/Reveal';
@@ -49,8 +50,8 @@ export default function Notices() {
               Students must submit certificates for hackathons, papers, and workshops to claim KTU/CUSAT points.
             </p>
           </div>
-          <a
-            href="/activity"
+          <Link
+            to="/activity"
             style={{
               background: 'var(--lime)',
               color: 'var(--ink)',
@@ -62,7 +63,7 @@ export default function Notices() {
             }}
           >
             Submit Proof Now
-          </a>
+          </Link>
         </div>
 
         {/* Search & Category Filter Toolbar */}

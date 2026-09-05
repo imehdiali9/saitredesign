@@ -132,8 +132,15 @@ export default function Placements() {
               <div
                 className="resource-card"
                 onClick={() => handleResourceClick(res)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleResourceClick(res);
+                  }
+                }}
                 role="button"
                 tabIndex={0}
+                aria-label={`Access ${res.title}`}
               >
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>

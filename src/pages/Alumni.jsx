@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExternalLink, Search } from 'lucide-react';
+import { ExternalLink, Search, ArrowUpRight } from 'lucide-react';
 import { IconLinkedin } from '../components/Icons';
 import { alumni } from '../data/data';
 import Reveal from '../components/Reveal';
@@ -106,6 +106,24 @@ export default function Alumni() {
           Graduated from CUSAT IT? Sign up as a project mentor, keynote speaker, or judge
           for Ignite Hackathon.
         </p>
+        <a
+          href="#contact"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'var(--ink)',
+            color: '#ffffff',
+            padding: '12px 24px',
+            borderRadius: '999px',
+            fontSize: '12px',
+            fontWeight: 800,
+            marginTop: '22px',
+            width: 'fit-content'
+          }}
+        >
+          Connect with Association Desk <ArrowUpRight size={15} />
+        </a>
       </section>
     </div>
   );

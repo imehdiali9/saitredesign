@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -23,6 +23,11 @@ export default function Layout({ children }) {
   const [open, setOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setOpen(false);
+  }, [location.pathname]);
 
   // Contact form state
   const [contactName, setContactName] = useState('');
@@ -215,9 +220,9 @@ export default function Layout({ children }) {
           {/* Contact Form UI */}
           <div className="contact-right">
             <form className="contact-form" onSubmit={handleContactSubmit}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
-                <span style={{ font: "500 10px 'DM Mono'", color: 'var(--purple)' }}>MESSAGE THE ASSOCIATION</span>
-                <span style={{ font: "500 9px 'DM Mono'", color: 'var(--muted)' }}>DIRECT INBOX</span>
+              <div className="contact-form-top">
+                <span className="contact-form-badge">MESSAGE THE ASSOCIATION</span>
+                <span className="contact-form-sub">DIRECT INBOX</span>
               </div>
 
               {contactSent ? (
@@ -227,7 +232,7 @@ export default function Layout({ children }) {
                 </div>
               ) : null}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="contact-form-row">
                 <label>
                   Your Name
                   <input

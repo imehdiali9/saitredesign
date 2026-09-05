@@ -1,35 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Calendar, Users, FileText, Bell, Trophy, BookOpen, ArrowRight, X } from 'lucide-react';
 import { events, faculty, people, notices, academicResources } from '../data/data';
 
 export default function CommandPalette({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        onClose(prev => !prev);
-      } else if (e.key === 'Escape' && isOpen) {
-        onClose(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
 
   const q = query.toLowerCase().trim();
 
   // Search items across entire platform
-  const items = [
+  const items = useMemo(() => [
     { title: 'Home / Overview', type: 'Page', icon: <ArrowRight size={14}/>, path: '/' },
     { title: 'About Department & SAIT', type: 'Page', icon: <ArrowRight size={14}/>, path: '/about' },
-    { title: 'Faculty & Administration Directory', type: 'Section', icon: <Users size={14}/>, path: '/about' },
-    { title: 'Academic Resources & Syllabus', type: 'Section', icon: <BookOpen size={14}/>, path: '/about' },
+    { title: 'Faculty & Administration Directory', type: 'Section', icon: <Users size={14}/>, path: '/about#faculty' },
+    { title: 'Academic Resources & Syllabus', type: 'Section', icon: <BookOpen size={14}/>, path: '/about#resources' },
     { title: 'Executive Committee & Sub-teams', type: 'Page', icon: <Users size={14}/>, path: '/people' },
     { title: 'Events Calendar & Activities', type: 'Page', icon: <Calendar size={14}/>, path: '/events' },
     { title: 'Placements & Career Resources', type: 'Page', icon: <FileText size={14}/>, path: '/placements' },
@@ -51,7 +37,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       title: `${f.name} — ${f.role}`,
       type: 'Faculty',
       icon: <Users size={14}/>,
-      path: '/about'
+      path: '/about#faculty'
     })),
 
     // Academic Resources
@@ -59,7 +45,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       title: `${r.title} [${r.format}]`,
       type: 'Resource',
       icon: <BookOpen size={14}/>,
-      path: '/about'
+      path: '/about#resources'
     })),
 
     // Notices
@@ -69,17 +55,64 @@ export default function CommandPalette({ isOpen, onClose }) {
       icon: <Bell size={14}/>,
       path: '/notices'
     }))
-  ];
+  ], []);
 
-  const filtered = q
-    ? items.filter(item => item.title.toLowerCase().includes(q) || item.type.toLowerCase().includes(q)).slice(0, 8)
-    : items.slice(0, 7);
+  const filtered = useMemo(() => {
+    return q
+      ? items.filter(item => item.title.toLowerCase().includes(q) || item.type.toLowerCase().includes(q)).slice(0, 8)
+      : items.slice(0, 7);
+  }, [items, q]);
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [q]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      setQuery('');
+      setSelectedIndex(0);
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const handleSelect = (path) => {
     navigate(path);
     onClose(false);
     setQuery('');
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        onClose(prev => !prev);
+      } else if (e.key === 'Escape' && isOpen) {
+        onClose(false);
+      } else if (isOpen) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedIndex(prev => (prev + 1) % Math.max(1, filtered.length));
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSelectedIndex(prev => (prev - 1 + filtered.length) % Math.max(1, filtered.length));
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (filtered[selectedIndex]) {
+            handleSelect(filtered[selectedIndex].path);
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose, filtered, selectedIndex]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={() => onClose(false)}>
@@ -106,8 +139,9 @@ export default function CommandPalette({ isOpen, onClose }) {
             filtered.map((item, idx) => (
               <div
                 key={idx}
-                className="cmd-item"
+                className={`cmd-item ${idx === selectedIndex ? 'active' : ''}`}
                 onClick={() => handleSelect(item.path)}
+                onMouseEnter={() => setSelectedIndex(idx)}
               >
                 <div className="cmd-item-left">
                   {item.icon}
@@ -121,7 +155,7 @@ export default function CommandPalette({ isOpen, onClose }) {
 
         <div className="cmd-footer">
           <span>Navigation Quick Search</span>
-          <span>ESC to close · ↵ to select</span>
+          <span>ESC to close · ↑↓ navigate · ↵ to select</span>
         </div>
       </div>
     </div>
