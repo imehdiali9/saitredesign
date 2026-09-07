@@ -25,9 +25,19 @@ export default function Layout({ children }) {
   const location = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    if (location.hash) {
+      const timer = setTimeout(() => {
+        const elem = document.querySelector(location.hash);
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 120);
+      return () => clearTimeout(timer);
+    } else {
+      window.scrollTo(0, 0);
+    }
     setOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   // Contact form state
   const [contactName, setContactName] = useState('');

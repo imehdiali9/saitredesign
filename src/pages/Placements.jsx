@@ -8,6 +8,29 @@ export default function Placements() {
   const [downloadedResource, setDownloadedResource] = useState(null);
 
   const handleResourceClick = (res) => {
+    const content = `=====================================================
+SAIT CAREER & PLACEMENT TOOLKIT
+${res.title}
+Badge: ${res.badge}
+-----------------------------------------------------
+Guide Overview:
+${res.desc}
+
+Curated by SAIT Tech & Placements Cell
+School of Engineering, CUSAT
+Inquiries: itdept@cusat.ac.in | https://saitcusat.in
+=====================================================`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(res.title || 'Career_Resource').replace(/[^a-zA-Z0-9]/g, '_')}_Guide.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
     setDownloadedResource(res.title);
     setTimeout(() => setDownloadedResource(null), 3500);
   };

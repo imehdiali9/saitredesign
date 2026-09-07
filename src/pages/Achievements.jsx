@@ -81,37 +81,61 @@ export default function Achievements() {
           </div>
         </div>
 
-        <div className="achieve-list">
-          {filtered.map((a, i) => (
-            <Reveal key={a.title} delay={i * 0.05}>
-              <article className="achieve-row">
-                <span className="achieve-year">{a.year}</span>
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>
+            <Trophy size={32} style={{ margin: '0 auto 12px', opacity: 0.5, color: 'var(--purple)' }} />
+            <p style={{ margin: '0 0 12px', fontSize: '13px' }}>
+              No honors or achievements match your current filter or query.
+            </p>
+            <button
+              onClick={() => { setFilter('All'); setYearFilter('All'); setQ(''); }}
+              style={{
+                background: 'var(--ink)',
+                color: '#fff',
+                border: 'none',
+                padding: '7px 18px',
+                borderRadius: '999px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <div className="achieve-list">
+            {filtered.map((a, i) => (
+              <Reveal key={a.title} delay={i * 0.05}>
+                <article className="achieve-row">
+                  <span className="achieve-year">{a.year}</span>
 
-                <div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span className="tag">{a.type}</span>
+                  <div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <span className="tag">{a.type}</span>
+                    </div>
+                    <h3>{a.title}</h3>
+                    <p>{a.detail}</p>
                   </div>
-                  <h3>{a.title}</h3>
-                  <p>{a.detail}</p>
-                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                  <span className="achieve-badge">{a.badge}</span>
-                  {a.proof && (
-                    <a
-                      href={a.proof}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--purple)', fontWeight: 700 }}
-                    >
-                      Official Proof <ExternalLink size={12} />
-                    </a>
-                  )}
-                </div>
-              </article>
-            </Reveal>
-          ))}
-        </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                    <span className="achieve-badge">{a.badge}</span>
+                    {a.proof && (
+                      <a
+                        href={a.proof}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--purple)', fontWeight: 700 }}
+                      >
+                        Official Proof <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

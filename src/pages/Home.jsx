@@ -500,6 +500,7 @@ function FormingWord({ word, delay = 0, isOutlined = false, wordIndex = 0 }) {
 
 export default function Home() {
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventModalTab, setEventModalTab] = useState('register');
 
   return (
     <>
@@ -580,8 +581,14 @@ export default function Home() {
         >
           <HackathonCountdown
             event={events[0]}
-            onRegister={(ev) => setSelectedEvent(ev)}
-            onDetails={(ev) => setSelectedEvent(ev)}
+            onRegister={(ev) => {
+              setSelectedEvent(ev);
+              setEventModalTab('register');
+            }}
+            onDetails={(ev) => {
+              setSelectedEvent(ev);
+              setEventModalTab('rulebook');
+            }}
           />
         </motion.div>
 
@@ -642,7 +649,10 @@ export default function Home() {
                 <EventCard
                   key={ev.id}
                   event={ev}
-                  onRegister={() => setSelectedEvent(ev)}
+                  onRegister={() => {
+                    setSelectedEvent(ev);
+                    setEventModalTab('register');
+                  }}
                 />
               ))}
             </div>
@@ -682,7 +692,13 @@ export default function Home() {
             </div>
             <div className="activity-graph">
               <div className="graph-label">ACTIVITY POINT TRAJECTORY / 2024—2026</div>
-              <ActivityGraph onEventClick={setSelectedEvent} eventsData={events} />
+              <ActivityGraph 
+                onEventClick={(ev) => {
+                  setSelectedEvent(ev);
+                  setEventModalTab('rulebook');
+                }} 
+                eventsData={events} 
+              />
             </div>
           </div>
         </Reveal>
@@ -725,9 +741,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Event Registration Modal */}
+      {/* Event Registration & Rulebook Modal */}
       <EventModal
         event={selectedEvent}
+        initialTab={eventModalTab}
         onClose={() => setSelectedEvent(null)}
       />
     </>

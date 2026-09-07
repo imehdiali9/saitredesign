@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Upload, Link as LinkIcon, CheckCircle2, Clock3, Plus,
-  ArrowUpRight, Award, ShieldCheck, Trophy, Sparkles, Filter
+  ArrowUpRight, Award, ShieldCheck, Trophy, Sparkles, Filter,
+  Trash2, FileText, X
 } from 'lucide-react';
 import Reveal from '../components/Reveal';
 import { initialActivities, leaderboard } from '../data/data';
@@ -19,8 +20,58 @@ export default function Activity() {
   const [type, setType] = useState('Hackathon');
   const [role, setRole] = useState('Participant');
   const [proofUrl, setProofUrl] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [files, setFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
   const [submittedToast, setSubmittedToast] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // Helper to format file sizes nicely
+  const formatBytes = (bytes) => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  };
+
+  const handleAddFiles = (fileList) => {
+    if (!fileList || fileList.length === 0) return;
+    const incoming = Array.from(fileList);
+    setFiles((prev) => {
+      const existingKeys = new Set(prev.map((f) => `${f.name}_${f.size}`));
+      const unique = incoming.filter((f) => !existingKeys.has(`${f.name}_${f.size}`));
+      return [...prev, ...unique];
+    });
+  };
+
+  const handleRemoveFile = (indexToRemove) => {
+    setFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const handleClearAllFiles = () => {
+    setFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer && e.dataTransfer.files) {
+      handleAddFiles(e.dataTransfer.files);
+    }
+  };
 
   // History / Feed filter
   const [historyFilter, setHistoryFilter] = useState('All');
@@ -51,6 +102,7 @@ export default function Activity() {
     if (type === 'Workshop') pts = 15;
     if (type === 'Volunteering') pts = 10;
 
+    const fileNames = files.map((f) => f.name);
     const newEntry = {
       id: Date.now(),
       name,
@@ -59,7 +111,8 @@ export default function Activity() {
       date: date || new Date().toISOString().split('T')[0],
       status: 'Under Review',
       points: pts,
-      proofUrl: proofUrl || (fileName ? `file://${fileName}` : 'https://cusat.ac.in'),
+      proofFiles: fileNames,
+      proofUrl: proofUrl || (fileNames.length > 0 ? fileNames.join(', ') : 'https://cusat.ac.in'),
       verifiedBy: 'Pending Faculty Review'
     };
 
@@ -70,7 +123,10 @@ export default function Activity() {
     setName('');
     setDate('');
     setProofUrl('');
-    setFileName('');
+    setFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
 
     setTimeout(() => {
       setSubmittedToast(false);
@@ -202,22 +258,100 @@ export default function Activity() {
                     </select>
                   </label>
 
-                  <label>
-                    Certificate Proof File
-                    <div className="upload-dropzone">
+                  <div className="proof-upload-field">
+                    <label htmlFor="certificate-file-input">
+                      Certificate Proof Files
+                      {files.length > 0 && (
+                        <span className="proof-count-badge">
+                          {files.length} attached
+                        </span>
+                      )}
+                    </label>
+
+                    <div
+                      className={`upload-dropzone ${isDragging ? 'is-dragging' : ''}`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                    >
                       <Upload size={18} color="var(--purple)" />
-                      <span>{fileName || 'Drop PDF certificate or click to browse'}</span>
+                      <span className="dropzone-text">
+                        {files.length === 0
+                          ? 'Drop certificate files or click to browse'
+                          : '+ Add more certificate files'}
+                      </span>
+                      <span className="dropzone-sub">
+                        PDF, PNG, JPG accepted (multiple allowed)
+                      </span>
                       <input
+                        id="certificate-file-input"
+                        ref={fileInputRef}
                         type="file"
+                        multiple
                         accept=".pdf,.png,.jpg,.jpeg"
+                        style={{ display: 'none' }}
                         onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            setFileName(e.target.files[0].name);
+                          if (e.target.files && e.target.files.length > 0) {
+                            handleAddFiles(e.target.files);
+                            e.target.value = '';
                           }
                         }}
                       />
                     </div>
-                  </label>
+
+                    {files.length > 0 && (
+                      <div className="selected-files-box">
+                        <div className="selected-files-header">
+                          <span>Attached Files ({files.length})</span>
+                          <button
+                            type="button"
+                            className="clear-files-btn"
+                            onClick={handleClearAllFiles}
+                          >
+                            Clear all
+                          </button>
+                        </div>
+                        <div className="selected-files-list">
+                          {files.map((file, idx) => (
+                            <div className="selected-file-item" key={`${file.name}-${file.size}-${idx}`}>
+                              <div className="file-item-info">
+                                <FileText size={15} className="file-item-icon" />
+                                <div className="file-item-text">
+                                  <span className="file-item-name" title={file.name}>
+                                    {file.name}
+                                  </span>
+                                  <span className="file-item-size">
+                                    {formatBytes(file.size)}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                className="file-delete-btn"
+                                title={`Delete ${file.name}`}
+                                aria-label={`Delete ${file.name}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveFile(idx);
+                                }}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <label>
@@ -329,9 +463,22 @@ export default function Activity() {
               <div className="history-row" key={item.id}>
                 <span className="history-dot" />
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <b style={{ fontSize: '14px' }}>{item.name}</b>
                     <span className="tag" style={{ fontSize: '8px' }}>{item.type}</span>
+                    {item.proofFiles && item.proofFiles.length > 0 && (
+                      <span
+                        className="tag"
+                        style={{
+                          fontSize: '8px',
+                          background: 'rgba(111, 63, 251, 0.08)',
+                          color: 'var(--purple)',
+                          borderColor: 'rgba(111, 63, 251, 0.25)'
+                        }}
+                      >
+                        {item.proofFiles.length} file{item.proofFiles.length > 1 ? 's' : ''} attached
+                      </span>
+                    )}
                   </div>
                   <small>
                     Role: {item.role} · Verified By: {item.verifiedBy}

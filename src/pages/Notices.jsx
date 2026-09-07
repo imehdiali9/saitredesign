@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, ArrowUpRight, Search, AlertCircle, Calendar, Pin } from 'lucide-react';
+import { Bell, ArrowUpRight, Search, AlertCircle, Calendar, Pin, Copy, CheckCircle2 } from 'lucide-react';
 import { notices } from '../data/data';
 import Reveal from '../components/Reveal';
 import SectionHead from '../components/SectionHead';
@@ -9,6 +9,7 @@ export default function Notices() {
   const [filter, setFilter] = useState('All');
   const [q, setQ] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
 
   const categories = ['All', 'Urgent', 'Academic', 'Events', 'Placements', 'General'];
 
@@ -22,6 +23,13 @@ export default function Notices() {
 
     return matchesCat && matchesQuery;
   });
+
+  const handleCopyNotice = (e, n) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(`[${n.id}] ${n.title}\nDate: ${n.date}\nIssued by: ${n.source}\n\n${n.content}`);
+    setCopiedId(n.id);
+    setTimeout(() => setCopiedId(null), 3000);
+  };
 
   return (
     <div className="page">
@@ -91,37 +99,101 @@ export default function Notices() {
         </div>
 
         {/* Notices Stack */}
-        <div className="notices-large">
-          {filtered.map((n, i) => (
-            <Reveal key={n.id} delay={i * 0.04}>
-              <article
-                style={{ cursor: 'pointer' }}
-                onClick={() => setExpandedId(expandedId === n.id ? null : n.id)}
-              >
-                <div className="notice-number">{n.id}</div>
-                <Bell size={18} color="var(--purple)" />
-                <div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px' }}>
-                    <span className="tag">{n.category}</span>
-                    <span className="notice-source">Issued by: {n.source}</span>
-                  </div>
-                  <h3>{n.title}</h3>
-                  <p>{n.content}</p>
-                </div>
-                <span style={{ font: "500 10px 'DM Mono'", color: 'var(--muted)', textAlign: 'right' }}>
-                  {n.date}
-                </span>
-                <ArrowUpRight
-                  size={18}
-                  style={{
-                    transform: expandedId === n.id ? 'rotate(90deg)' : 'none',
-                    transition: 'transform 0.2s'
-                  }}
-                />
-              </article>
-            </Reveal>
-          ))}
-        </div>
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>
+            <AlertCircle size={32} style={{ margin: '0 auto 12px', opacity: 0.5, color: 'var(--purple)' }} />
+            <p style={{ margin: '0 0 12px', fontSize: '13px' }}>
+              No notices or circulars match your current filter or query.
+            </p>
+            <button
+              onClick={() => { setFilter('All'); setQ(''); }}
+              style={{
+                background: 'var(--ink)',
+                color: '#fff',
+                border: 'none',
+                padding: '7px 18px',
+                borderRadius: '999px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <div className="notices-large">
+            {filtered.map((n, i) => {
+              const isExpanded = expandedId === n.id;
+              return (
+                <Reveal key={n.id} delay={i * 0.04}>
+                  <article
+                    className={`notice-article ${isExpanded ? 'is-expanded' : ''}`}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => setExpandedId(isExpanded ? null : n.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setExpandedId(isExpanded ? null : n.id);
+                      }
+                    }}
+                    aria-expanded={isExpanded}
+                  >
+                    <div className="notice-number">{n.id}</div>
+                    <Bell size={18} color="var(--purple)" style={{ flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap' }}>
+                        <span className="tag">{n.category}</span>
+                        <span className="notice-source">Issued by: {n.source}</span>
+                      </div>
+                      <h3>{n.title}</h3>
+                      <p className={`notice-text ${isExpanded ? 'is-open' : 'is-clamped'}`}>
+                        {n.content}
+                      </p>
+
+                      {isExpanded && (
+                        <div className="notice-actions-row">
+                          <button
+                            type="button"
+                            className="notice-action-btn"
+                            onClick={(e) => handleCopyNotice(e, n)}
+                          >
+                            {copiedId === n.id ? (
+                              <>
+                                <CheckCircle2 size={13} color="#16a34a" /> Copied Notice
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={13} /> Copy Details
+                              </>
+                            )}
+                          </button>
+                          <span className="notice-verified-tag">
+                            Official Division Circular
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ font: "500 10px 'DM Mono'", color: 'var(--muted)', textAlign: 'right' }}>
+                      {n.date}
+                    </span>
+                    <ArrowUpRight
+                      size={18}
+                      style={{
+                        transform: isExpanded ? 'rotate(90deg)' : 'none',
+                        transition: 'transform 0.2s',
+                        color: isExpanded ? 'var(--purple)' : 'var(--muted)',
+                        flexShrink: 0
+                      }}
+                    />
+                  </article>
+                </Reveal>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );

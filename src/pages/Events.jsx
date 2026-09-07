@@ -67,16 +67,40 @@ export default function Events() {
         </div>
 
         {/* Upcoming Events List */}
-        <div className="events-list">
-          {filteredUpcoming.map((e, i) => (
-            <Reveal key={e.id} delay={i * 0.05}>
-              <EventCard
-                event={e}
-                onRegister={(ev) => setSelectedEvent(ev)}
-              />
-            </Reveal>
-          ))}
-        </div>
+        {filteredUpcoming.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>
+            <Sparkles size={32} style={{ margin: '0 auto 12px', opacity: 0.5, color: 'var(--purple)' }} />
+            <p style={{ margin: '0 0 12px', fontSize: '13px' }}>
+              No upcoming events match your selected category or search term.
+            </p>
+            <button
+              onClick={() => { setFilter('All'); setQ(''); }}
+              style={{
+                background: 'var(--ink)',
+                color: '#fff',
+                border: 'none',
+                padding: '7px 18px',
+                borderRadius: '999px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <div className="events-list">
+            {filteredUpcoming.map((e, i) => (
+              <Reveal key={e.id} delay={i * 0.05}>
+                <EventCard
+                  event={e}
+                  onRegister={(ev) => setSelectedEvent(ev)}
+                />
+              </Reveal>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Past Events & Organised Archive (Official Section D Requirement) */}

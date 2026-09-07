@@ -8,6 +8,32 @@ export default function About() {
   const [downloadNotice, setDownloadNotice] = useState(null);
 
   const handleDownload = (resource) => {
+    if (resource.id === 'lab-manuals') {
+      window.open('https://github.com/sait-cusat', '_blank', 'noreferrer');
+    } else {
+      const docText = `=====================================================
+DIVISION OF INFORMATION TECHNOLOGY - SOE CUSAT
+Official Academic Document: ${resource.title}
+Category: ${resource.category} | Format: ${resource.format} | Size: ${resource.fileSize}
+-----------------------------------------------------
+Description:
+${resource.description}
+
+Official Department Portal: https://saitcusat.in
+Department Office: +91 (484) 286 2100 | itdept@cusat.ac.in
+=====================================================`;
+
+      const blob = new Blob([docText], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${resource.id}_curriculum.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
     setDownloadNotice(resource.title);
     setTimeout(() => {
       setDownloadNotice(null);

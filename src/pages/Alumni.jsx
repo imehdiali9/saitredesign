@@ -62,40 +62,63 @@ export default function Alumni() {
           </label>
         </div>
 
-        <div className="alumni-list">
-          {filtered.map((a, i) => (
-            <Reveal key={a.name} delay={i * 0.06}>
-              <article className="alumni-card">
-                <div className="alumni-year">'{a.batch}</div>
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>
+            <p style={{ margin: '0 0 12px', fontSize: '13px' }}>
+              No alumni profiles match your search or filter.
+            </p>
+            <button
+              onClick={() => { setFilter('All'); setQ(''); }}
+              style={{
+                background: 'var(--ink)',
+                color: '#fff',
+                border: 'none',
+                padding: '7px 18px',
+                borderRadius: '999px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <div className="alumni-list">
+            {filtered.map((a, i) => (
+              <Reveal key={a.name} delay={i * 0.06}>
+                <article className="alumni-card">
+                  <div className="alumni-year">'{a.batch}</div>
 
-                <div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-                    <span className="alumni-tag">{a.domain}</span>
-                    <span style={{ font: "500 10px 'DM Mono'", color: 'var(--muted)' }}>
-                      Batch of 20{a.batch}
-                    </span>
+                  <div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
+                      <span className="alumni-tag">{a.domain}</span>
+                      <span style={{ font: "500 10px 'DM Mono'", color: 'var(--muted)' }}>
+                        Batch of 20{a.batch}
+                      </span>
+                    </div>
+                    <h3>{a.name}</h3>
+                    <div className="alumni-role">
+                      {a.role} · <span style={{ color: 'var(--purple)' }}>{a.company}</span>
+                    </div>
+                    <p>{a.contribution}</p>
                   </div>
-                  <h3>{a.name}</h3>
-                  <div className="alumni-role">
-                    {a.role} · <span style={{ color: 'var(--purple)' }}>{a.company}</span>
-                  </div>
-                  <p>{a.contribution}</p>
-                </div>
 
-                <div className="alumni-actions">
-                  <a
-                    href={a.linkedin}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="alumni-connect-link"
-                  >
-                    <IconLinkedin size={13} /> Connect
-                  </a>
-                </div>
-              </article>
-            </Reveal>
-          ))}
-        </div>
+                  <div className="alumni-actions">
+                    <a
+                      href={a.linkedin}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="alumni-connect-link"
+                    >
+                      <IconLinkedin size={13} /> Connect
+                    </a>
+                  </div>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Community Banner */}
@@ -108,6 +131,10 @@ export default function Alumni() {
         </p>
         <a
           href="#contact"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+          }}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
