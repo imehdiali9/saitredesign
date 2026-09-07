@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { 
   X, CheckCircle, Calendar, MapPin, Download, BookOpen, 
   Ticket, Trophy, Clock, Users, ShieldCheck, Award, ArrowRight,
-  FileText, Sparkles, Flame, Check
+  FileText, Sparkles, Flame, Check, QrCode as QrIcon
 } from 'lucide-react';
 
 export default function EventModal({ event, initialTab = 'register', onClose }) {
@@ -12,6 +13,7 @@ export default function EventModal({ event, initialTab = 'register', onClose }) 
   const [batch, setBatch] = useState('S5 IT');
   const [registered, setRegistered] = useState(false);
   const [ticketId, setTicketId] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState('');
   const [downloaded, setDownloaded] = useState(false);
   const [rulebookDownloaded, setRulebookDownloaded] = useState(false);
 
@@ -36,6 +38,26 @@ export default function EventModal({ event, initialTab = 'register', onClose }) 
     };
   }, [event, onClose]);
 
+  // Generate genuine scannable QR Code whenever registration succeeds
+  useEffect(() => {
+    if (registered && ticketId && event) {
+      const verifyUrl = `https://saitcusat.vercel.app/activity?pass=${ticketId}&event=${encodeURIComponent(event.title || '')}&name=${encodeURIComponent(name || '')}`;
+      QRCode.toDataURL(verifyUrl, {
+        width: 300,
+        margin: 1,
+        errorCorrectionLevel: 'M',
+        color: {
+          dark: '#0a0d14',
+          light: '#ffffff'
+        }
+      }).then((url) => {
+        setQrDataUrl(url);
+      }).catch((err) => {
+        console.error('Failed to generate pass QR code', err);
+      });
+    }
+  }, [registered, ticketId, event, name]);
+
   if (!event) return null;
 
   const isHackathon = event.category === 'Hackathon' || event.title?.toLowerCase().includes('hackathon');
@@ -47,38 +69,205 @@ export default function EventModal({ event, initialTab = 'register', onClose }) 
     setRegistered(true);
   };
 
-  const handleDownload = () => {
-    const passContent = `=====================================================
-SAIT OFFICIAL DIGITAL ATTENDEE PASS
-School of Engineering, CUSAT | Division of Information Technology
-=====================================================
-Pass ID: ${ticketId}
-Event: ${event.title}
-Date & Time: ${event.day} ${event.month} 2026 (${event.time || 'Venue Schedule'})
-Venue: ${event.venue}
-Category: ${event.category}
------------------------------------------------------
-Attendee Name: ${name}
-University Reg No: ${regNo}
-Batch: ${batch}
-Status: VERIFIED ADMISSION
------------------------------------------------------
-Please present this pass or Pass ID at the registration desk.
-Inquiries: sait@cusat.ac.in | https://saitcusat.in
-=====================================================`;
+  const handleDownloadJpg = async () => {
+    if (!ticketId || !event) return;
 
-    const blob = new Blob([passContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `SAIT_Pass_${ticketId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      const canvas = document.createElement('canvas');
+      const width = 1000;
+      const height = 520;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    setDownloaded(true);
-    setTimeout(() => setDownloaded(false), 3000);
+      // 1. Dark Premium Ticket Background
+      ctx.fillStyle = '#0a0d14';
+      ctx.fillRect(0, 0, width, height);
+
+      // Radial purple ambient glow
+      const glow = ctx.createRadialGradient(820, 110, 10, 820, 110, 480);
+      glow.addColorStop(0, 'rgba(111, 63, 251, 0.32)');
+      glow.addColorStop(1, 'rgba(10, 13, 20, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, width, height);
+
+      // Card outer border
+      ctx.strokeStyle = '#272e3d';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(1.5, 1.5, width - 3, height - 3);
+
+      // 2. Top Header Bar
+      ctx.fillStyle = '#111622';
+      ctx.fillRect(3, 3, width - 6, 68);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '600 13.5px "DM Mono", monospace';
+      ctx.fillText('SAIT OFFICIAL ATTENDEE PASS · DIVISION OF IT, SOE CUSAT', 38, 42);
+
+      ctx.fillStyle = '#d9ff4a';
+      ctx.font = '700 16px "DM Mono", monospace';
+      const idText = `PASS ID: ${ticketId}`;
+      const idWidth = ctx.measureText(idText).width;
+      ctx.fillText(idText, width - 38 - idWidth, 42);
+
+      // Header bottom border
+      ctx.strokeStyle = '#242b3a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(3, 71);
+      ctx.lineTo(width - 3, 71);
+      ctx.stroke();
+
+      // 3. Category Tag Pill
+      const tagText = (event.category || 'EVENT PASS').toUpperCase();
+      ctx.font = '700 12px "DM Mono", monospace';
+      const tagW = ctx.measureText(tagText).width;
+      const pillX = 38;
+      const pillY = 100;
+      const pillW = tagW + 22;
+      const pillH = 26;
+
+      ctx.fillStyle = 'rgba(111, 63, 251, 0.22)';
+      ctx.strokeStyle = '#7c3aed';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+      } else {
+        ctx.rect(pillX, pillY, pillW, pillH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#c4b5fd';
+      ctx.fillText(tagText, pillX + 11, pillY + 17);
+
+      // 4. Event Title
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 34px "Manrope", system-ui, sans-serif';
+      let titleStr = event.title || 'Ignite Hackathon 2026';
+      if (ctx.measureText(titleStr).width > 620) {
+        while (ctx.measureText(titleStr + '...').width > 620 && titleStr.length > 0) {
+          titleStr = titleStr.slice(0, -1);
+        }
+        titleStr += '...';
+      }
+      ctx.fillText(titleStr, 38, 170);
+
+      // 5. Attendee Credentials
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '700 22px "Manrope", system-ui, sans-serif';
+      ctx.fillText(name || 'Participant Attendee', 38, 218);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 15px "DM Mono", monospace';
+      ctx.fillText(`Reg No: ${regNo || 'Pending'} · Batch: ${batch || 'IT Batch'}`, 38, 248);
+
+      // 6. Schedule & Venue Details
+      ctx.fillStyle = '#d9ff4a';
+      ctx.font = '700 17px "Manrope", system-ui, sans-serif';
+      ctx.fillText(`📅 ${event.day} ${event.month} 2026 (${event.time || 'Schedule'})  ·  📍 ${event.venue || 'SOE CUSAT'}`, 38, 296);
+
+      // 7. Verification / Admission Line
+      ctx.strokeStyle = '#222938';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(38, 332);
+      ctx.lineTo(660, 332);
+      ctx.stroke();
+
+      ctx.fillStyle = '#22c55e';
+      ctx.font = '700 13px "DM Mono", monospace';
+      ctx.fillText('● STATUS: VERIFIED ADMISSION', 38, 362);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '500 11.5px "DM Mono", monospace';
+      ctx.fillText('Official attendee credential. Present QR barcode at venue entry desk.', 38, 388);
+      ctx.fillText('Issued by Students Association of Information Technology (SAIT CUSAT)', 38, 410);
+
+      // 8. Functional Barcode Graphic Strip (Code 128 styling)
+      const barX = 38;
+      const barY = 435;
+      const barH = 34;
+      const bars = [3, 1, 2, 4, 1, 3, 2, 5, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 5, 2, 4, 1, 3, 2, 4, 1, 2, 3, 5, 1, 4, 2, 3, 1, 4, 2, 3, 1, 2, 4, 5, 1, 3, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 5, 2, 4];
+      let runningX = barX;
+      ctx.fillStyle = '#94a3b8';
+      for (let i = 0; i < bars.length; i++) {
+        if (i % 2 === 0) {
+          ctx.fillRect(runningX, barY, bars[i], barH);
+        }
+        runningX += bars[i] + 1;
+      }
+      ctx.font = '600 11px "DM Mono", monospace';
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillText(`*${ticketId}*`, barX + 90, barY + barH + 16);
+
+      // 9. QR Code Container Box
+      const qrBoxX = 705;
+      const qrBoxY = 100;
+      const qrBoxSize = 255;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize + 60, 12);
+      } else {
+        ctx.rect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize + 60);
+      }
+      ctx.fill();
+      ctx.strokeStyle = '#384254';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Ensure QR Code Image is rendered onto canvas
+      const verifyUrl = `https://saitcusat.vercel.app/activity?pass=${ticketId}&event=${encodeURIComponent(event.title || '')}&name=${encodeURIComponent(name || '')}`;
+      const urlForCanvas = qrDataUrl || await QRCode.toDataURL(verifyUrl, {
+        width: 320,
+        margin: 1,
+        errorCorrectionLevel: 'M',
+        color: { dark: '#0a0d14', light: '#ffffff' }
+      });
+
+      const qrImg = new Image();
+      qrImg.crossOrigin = 'anonymous';
+      qrImg.onload = () => {
+        // Draw scannable QR Code
+        ctx.drawImage(qrImg, qrBoxX + 17.5, qrBoxY + 16, 220, 220);
+
+        // QR Code captions
+        ctx.fillStyle = '#0a0d14';
+        ctx.font = '800 11.5px "DM Mono", monospace';
+        const c1 = 'SCAN TO VERIFY PASS';
+        const w1 = ctx.measureText(c1).width;
+        ctx.fillText(c1, qrBoxX + (qrBoxSize - w1) / 2, qrBoxY + 256);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '600 9.5px "DM Mono", monospace';
+        const c2 = 'OFFICIAL EVENT ADMISSION';
+        const w2 = ctx.measureText(c2).width;
+        ctx.fillText(c2, qrBoxX + (qrBoxSize - w2) / 2, qrBoxY + 274);
+
+        // Convert canvas to JPG blob and trigger download
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const downloadUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = `SAIT_Pass_${ticketId}.jpg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(downloadUrl);
+
+          setDownloaded(true);
+          setTimeout(() => setDownloaded(false), 3000);
+        }, 'image/jpeg', 0.95);
+      };
+      qrImg.src = urlForCanvas;
+    } catch (err) {
+      console.error('Error generating pass JPG:', err);
+    }
   };
 
   const handleDownloadRulebook = () => {
@@ -524,44 +713,49 @@ Website: https://saitcusat.in | Email: sait@cusat.ac.in
                       <p style={{color:'var(--lime)', marginTop:'4px'}}>{event.day} {event.month} · {event.venue}</p>
                     </div>
 
-                    <div className="ticket-qr">
-                      <svg viewBox="0 0 100 100">
-                        <rect width="100" height="100" fill="#ffffff" />
-                        <rect x="5" y="5" width="30" height="30" fill="#0a0d12" />
-                        <rect x="10" y="10" width="20" height="20" fill="#ffffff" />
-                        <rect x="15" y="15" width="10" height="10" fill="#0a0d12" />
-
-                        <rect x="65" y="5" width="30" height="30" fill="#0a0d12" />
-                        <rect x="70" y="10" width="20" height="20" fill="#ffffff" />
-                        <rect x="75" y="15" width="10" height="10" fill="#0a0d12" />
-
-                        <rect x="5" y="65" width="30" height="30" fill="#0a0d12" />
-                        <rect x="10" y="70" width="20" height="20" fill="#ffffff" />
-                        <rect x="15" y="75" width="10" height="10" fill="#0a0d12" />
-
-                        <rect x="42" y="10" width="8" height="20" fill="#0a0d12" />
-                        <rect x="42" y="42" width="16" height="16" fill="#0a0d12" />
-                        <rect x="65" y="45" width="10" height="20" fill="#0a0d12" />
-                        <rect x="42" y="70" width="18" height="18" fill="#0a0d12" />
-                        <rect x="70" y="75" width="15" height="15" fill="#0a0d12" />
-                      </svg>
+                    <div className="ticket-qr" title="Real scannable attendee QR code">
+                      {qrDataUrl ? (
+                        <img
+                          src={qrDataUrl}
+                          alt={`QR Code Pass for ${name}`}
+                          style={{
+                            width: '84px',
+                            height: '84px',
+                            display: 'block',
+                            background: '#ffffff',
+                            borderRadius: '4px',
+                            padding: '3px'
+                          }}
+                        />
+                      ) : (
+                        <div style={{ width: '84px', height: '84px', background: '#ffffff', borderRadius: '4px' }} />
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div style={{display:'flex', gap:'12px', marginTop:'20px'}}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '10px 0 16px', padding: '0 4px', fontSize: '11px', color: 'var(--muted)' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                    <QrIcon size={13} color="var(--purple)" /> Scannable with any phone camera
+                  </span>
+                  <span style={{ font: "600 10px 'DM Mono'", color: 'var(--purple)' }}>
+                    HIGH-RES JPG EXPORT
+                  </span>
+                </div>
+
+                <div style={{display:'flex', gap:'12px', marginTop:'12px'}}>
                   <button
                     className="submit-btn"
-                    style={{flex:1, padding:'11px'}}
-                    onClick={handleDownload}
+                    style={{flex:1, padding:'12px'}}
+                    onClick={handleDownloadJpg}
                   >
                     {downloaded ? (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <CheckCircle size={14}/> Pass Saved!
+                        <CheckCircle size={15}/> Pass Downloaded (.JPG)!
                       </span>
                     ) : (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <Download size={14}/> Download Pass
+                        <Download size={15}/> Download Pass (.JPG)
                       </span>
                     )}
                   </button>
